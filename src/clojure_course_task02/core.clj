@@ -2,12 +2,20 @@
   (:require [clojure.java.io :as io])
   (:gen-class))
 
+(defn explore-file [file-list]
+  (loop [files file-list 
+         res []]  
+    (let [dirs 
+          (mapcat #(.listFiles %) 
+               (filter #(.isDirectory %) files))] 
+          (if (empty? dirs)
+            res
+            (recur dirs (into res (map #(.getName %) files)))))))
+
 (defn find-files [file-name path]
   (let [file-name-regex (re-pattern file-name)]
     (remove #(empty? (re-seq file-name-regex %)) 
-            (map #(.getName %) 
-                 (file-seq
-                   (io/file path))))))
+                 (explore-file [(io/file path)]))))
 
 (defn usage []
   (println "Usage: $ run.sh file_name path"))
