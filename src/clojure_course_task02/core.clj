@@ -2,12 +2,14 @@
   (:require [clojure.java.io :as io])
   (:gen-class))
 
+(defn list-files-in-files [files]
+  (future 
+    (mapcat #(.listFiles %) 
+            (filter #(.isDirectory %) files))))
+
 (defn explore-file [file-list]
-  (loop [files file-list 
-         res []]  
-    (let [dirs 
-          (mapcat #(.listFiles %) 
-               (filter #(.isDirectory %) files))] 
+  (loop [files file-list res []]  
+    (let [dirs @(list-files-in-files files)] 
           (if (empty? dirs)
             res
             (recur dirs (into res (map #(.getName %) files)))))))
@@ -26,4 +28,5 @@
     (usage)
     (do
       (println "Searching for " file-name " in " path "...")
-      (dorun (map println (find-files file-name path))))))
+      (dorun (map println (find-files file-name path)))))
+  (shutdown-agents))
